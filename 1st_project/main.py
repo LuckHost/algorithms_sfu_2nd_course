@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import ( QApplication, QMainWindow, QPushButton,
 QListWidget, QVBoxLayout, QWidget, QFileDialog, QLabel, QHBoxLayout, 
 QInputDialog, QMessageBox
 )
+from PyQt5 import QtCore
 import pygame
 from music_track import MusicTrack
 from playlist import Playlist
@@ -16,6 +17,10 @@ class PlaylistUI(QMainWindow):
         # Плейлисты
         self.playlists = {}
         self.current_playlist = None
+        
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.next_track_when_ended)
 
     def initUI(self):
         self.setWindowTitle("Music Playlist Manager")
@@ -63,14 +68,10 @@ class PlaylistUI(QMainWindow):
         remove_track_btn.clicked.connect(self.remove_track)
         track_buttons_layout.addWidget(remove_track_btn)
 
-        # move_up_btn = QPushButton("Move Up")
-        # move_up_btn.clicked.connect(self.move_track_up)
-        # track_buttons_layout.addWidget(move_up_btn)
-
-        # move_down_btn = QPushButton("Move Down")
-        # move_down_btn.clicked.connect(self.move_track_down)
-        # track_buttons_layout.addWidget(move_down_btn)
-
+        move_btn = QPushButton("Move track to")
+        move_btn.clicked.connect(self.move_track)
+        track_buttons_layout.addWidget(move_btn)
+        
         main_layout.addLayout(track_buttons_layout)
 
         # Панель управления проигрыванием
@@ -129,7 +130,8 @@ class PlaylistUI(QMainWindow):
         """Обновление списка треков на основе текущего плейлиста."""
         self.track_list.clear()  # Очищаем предыдущий список треков
         if self.current_playlist:
-            for track in self.current_playlist:  # Итерация по трекам в текущем плейлисте
+            for track in self.current_playlist:  
+                # Итерация по трекам в текущем плейлисте
                 self.track_list.addItem(track.data.path)
 
     def delete_playlist(self):
@@ -137,8 +139,10 @@ class PlaylistUI(QMainWindow):
         selected_playlist_name = self.playlist_list.currentItem()
         
         if selected_playlist_name:
-            del self.playlists[selected_playlist_name.text()]  # Удаляем из словаря
-            self.playlist_list.takeItem(self.playlist_list.currentRow())  # Удаляем из интерфейса
+            del self.playlists[selected_playlist_name.text()]  
+            # Удаляем из словаря
+            self.playlist_list.takeItem(self.playlist_list.currentRow())  
+            # Удаляем из интерфейса
             self.current_playlist = None
             print(f"Плейлист '{selected_playlist_name.text()}' удалён.")
         else:
@@ -168,18 +172,21 @@ class PlaylistUI(QMainWindow):
 
         selected_track = self.track_list.currentItem()
         if selected_track:
-            track_path = selected_track.text()  # Получаем текст выбранного трека
+            track_path = selected_track.text()  
+            # Получаем текст выбранного трека
             track_found = False  # Флаг для отслеживания, найден ли трек
 
             # Ищем трек в текущем плейлисте
             for node in self.current_playlist:  # Итерация по узлам
                 if node.data.path == track_path:  # Сравниваем с node.data.path
-                    self.current_playlist.remove(node.data)  # Удаляем трек из плейлиста
+                    self.current_playlist.remove(node.data)  
+                    # Удаляем трек из плейлиста
                     track_found = True
                     break
 
             if track_found:
-                self.track_list.takeItem(self.track_list.currentRow())  # Удаляем трек из интерфейса
+                self.track_list.takeItem(self.track_list.currentRow())  
+                # Удаляем трек из интерфейса
                 print(f"Трек '{track_path}' удалён из плейлиста.")
             else:
                 print(f"Трек '{track_path}' не найден в плейлисте.")
@@ -187,20 +194,59 @@ class PlaylistUI(QMainWindow):
             print("Трек для удаления не выбран.")
 
 
-    def move_track(self, from_index, to_index):
+    def move_track(self):
         """Перемещение трека на другую позицию в текущем плейлисте."""
-        if not (self.current_playlist):
+        if not self.current_playlist:
             print("Плейлист не выбран.")
             return
 
-        track = self.current_playlist[from_index]
-        self.current_playlist.remove(track)  # Удаляем трек с текущей позиции
-        self.current_playlist.insert(self.current_playlist[to_index], track)  # Вставляем на новую позицию
+        current_row = self.track_list.currentRow()  # Получаем текущую позицию трека
+        if current_row < 0:
+            self.show_error_message("Выберите композицию для смены позиции.")
+            return
 
-        # Обновление списка треков в интерфейсе
-        self.track_list.insertItem(to_index, self.track_list.takeItem(from_index))
-        print(f"Трек перемещён с позиции {from_index} на позицию {to_index}.")
+        if len(self.current_playlist) < 2:
+            self.show_error_message(
+                "В плейлисте должно быть минимум 2 композиции для перестановки"
+            )
+            return
+
+        # Запрашиваем новую позицию
+        response = QInputDialog.getInt(
+            self,
+            "Место композиции",
+            f"Введите число от 1 до {len(self.current_playlist)}",
+            min=1,
+            max=len(self.current_playlist),
+        )
+
+        if not response[1]:
+            return  # Если ввод отменен
+
+        new_position = response[0] - 1
+
+        # Проверяем, не совпадают ли текущая и новая позиции
+        if current_row == new_position:
+            return
+
+        # Находим трек для перемещения
+        track_to_move = self.find_song_by_id(current_row)
         
+        # Удаляем трек из текущей позиции
+        self.remove_track()
+
+        # Вставляем трек на новую позицию
+        if current_row < new_position:
+            prev_track = self.find_song_by_id(new_position - 1)
+        else:
+            prev_track = self.find_song_by_id(new_position)
+
+        # Добавляем трек обратно в плейлист на нужную позицию
+        self.current_playlist.insert(prev_track.data, track_to_move.data)
+
+        # Обновляем список треков в интерфейсе
+        self.update_track_list()
+
         
     def find_song_by_id(self, sid):
         """Find song by id."""
@@ -220,28 +266,20 @@ class PlaylistUI(QMainWindow):
     def play_current_track(self):
         """Проигрывание текущего трека."""
         if not self.current_playlist:
-            print("Плейлист не выбран.")
+            print("Плейлист не выбран или он пуст.")
             return
 
         selected_track = self.track_list.currentRow()
         if selected_track >= 0:
-            
-            # track = selected_track.text()  # Получаем путь к треку
-            
             self.play_song_by_id(selected_track)
-            
-            # for node in self.current_playlist:  # Итерация по узлам
-            #     if node.data.path == track_path: 
-            #         try:
-            #             pygame.mixer.music.load(track_path)  # Загружаем трек
-            #             pygame.mixer.music.play()  # Воспроизводим трек
-            #             print(f"Проигрывание трека: {track_path}")
-            #             self.current_track_label.setText(f"Current Track: {track_path}")  # Обновляем информацию о треке
-            #         except pygame.error as e:
-            #             self.show_error_message(f"Ошибка воспроизведения трека: {e}")
+
         else:
             print(selected_track)
-            print("Нет трека для воспроизведения.")
+            self.current_playlist.play_all(
+                self.find_song_by_id(0)
+            )
+            print("Проигрывается плейлист целиком")
+            
 
     def next_track(self):
         """Воспроизведение следующего трека."""
@@ -258,6 +296,13 @@ class PlaylistUI(QMainWindow):
             return
 
         self.current_playlist.previous_track()  # Переход на предыдущий трек
+        
+    def next_track_when_ended(self):
+        """Play next track on current end."""
+        if pygame.mixer.music.get_busy():
+            return
+
+        self.current_playlist.next_track()
 
     def loop_playlist(self):
         """Зацикливание плейлиста."""
@@ -266,10 +311,9 @@ class PlaylistUI(QMainWindow):
             return
 
         if not pygame.mixer.music.get_busy():
-            self.play_current_track()  # Перезапуск текущего плейлиста
+            self.next_track() # Перезапуск текущего плейлиста
 
         pygame.mixer.music.set_endevent(pygame.USEREVENT)  # Зацикливание
-        self.play_current_track()
         
     def show_error_message(self, message):
         """Отображение сообщения об ошибке"""
