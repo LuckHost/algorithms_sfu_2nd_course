@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import ( QApplication, QMainWindow, QPushButton,
 QListWidget, QVBoxLayout, QWidget, QFileDialog, QLabel, QHBoxLayout, 
 QInputDialog, QMessageBox
 )
-from PyQt5.QtCore import Qt
 import pygame
 from music_track import MusicTrack
 from playlist import Playlist
@@ -201,6 +200,22 @@ class PlaylistUI(QMainWindow):
         # Обновление списка треков в интерфейсе
         self.track_list.insertItem(to_index, self.track_list.takeItem(from_index))
         print(f"Трек перемещён с позиции {from_index} на позицию {to_index}.")
+        
+        
+    def find_song_by_id(self, sid):
+        """Find song by id."""
+        print(self.current_playlist)
+        for idx, track in enumerate(self.current_playlist):
+            print(f"{sid} {idx}")
+            if idx == sid:
+                return track
+
+        return None
+
+    def play_song_by_id(self, sid):
+        """Play song by id."""
+        track = self.find_song_by_id(sid)
+        self.current_playlist.play_all(track)
 
     def play_current_track(self):
         """Проигрывание текущего трека."""
@@ -208,21 +223,25 @@ class PlaylistUI(QMainWindow):
             print("Плейлист не выбран.")
             return
 
-        selected_track = self.track_list.currentItem()
-        if selected_track:
-            track_path = selected_track.text()  # Получаем путь к треку
-            try:
-                pygame.mixer.music.load(track_path)  # Загружаем трек
-                pygame.mixer.music.play()  # Воспроизводим трек
-                print(f"Проигрывание трека: {track_path}")
-                self.current_track_label.setText(f"Current Track: {track_path}")  # Обновляем информацию о треке
-            except pygame.error as e:
-                self.show_error_message(f"Ошибка воспроизведения трека: {e}")
+        selected_track = self.track_list.currentRow()
+        if selected_track >= 0:
+            
+            # track = selected_track.text()  # Получаем путь к треку
+            
+            self.play_song_by_id(selected_track)
+            
+            # for node in self.current_playlist:  # Итерация по узлам
+            #     if node.data.path == track_path: 
+            #         try:
+            #             pygame.mixer.music.load(track_path)  # Загружаем трек
+            #             pygame.mixer.music.play()  # Воспроизводим трек
+            #             print(f"Проигрывание трека: {track_path}")
+            #             self.current_track_label.setText(f"Current Track: {track_path}")  # Обновляем информацию о треке
+            #         except pygame.error as e:
+            #             self.show_error_message(f"Ошибка воспроизведения трека: {e}")
         else:
+            print(selected_track)
             print("Нет трека для воспроизведения.")
-
-
-        
 
     def next_track(self):
         """Воспроизведение следующего трека."""
@@ -231,7 +250,6 @@ class PlaylistUI(QMainWindow):
             return
 
         self.current_playlist.next_track()  # Переход на следующий трек
-        self.play_current_track()
 
     def previous_track(self):
         """Воспроизведение предыдущего трека."""
@@ -240,7 +258,6 @@ class PlaylistUI(QMainWindow):
             return
 
         self.current_playlist.previous_track()  # Переход на предыдущий трек
-        self.play_current_track()
 
     def loop_playlist(self):
         """Зацикливание плейлиста."""

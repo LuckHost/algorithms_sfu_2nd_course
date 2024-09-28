@@ -2,7 +2,7 @@
 
 import unittest
 
-from linked_list import DoublyLinkedList, Node
+from linked_list import LinkedList, LinkedListItem
 
 TEST_LEN = [
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
@@ -62,7 +62,7 @@ def create_linked_list(nodes_list):
     """Создание связного списка"""
     first = previous = None
     for item in nodes_list:
-        node = Node(item)
+        node = LinkedListItem(item)
         if previous:
             previous.next = node
         elif not first:
@@ -70,15 +70,15 @@ def create_linked_list(nodes_list):
         previous = node
     if previous:
         previous.next = first
-    return DoublyLinkedList(first)
+    return LinkedList(first)
 
 
 class TestLinkedListItem(unittest.TestCase):
     """Тест-кейс класса LinkedListItem"""
     def test_next_item(self):
         """Тест соединения узлов через next_item"""
-        node_a = Node(42)
-        node_b = Node(196)
+        node_a = LinkedListItem(42)
+        node_b = LinkedListItem(196)
         node_a.next = node_b
         self.assertTrue(node_a.next is node_b)
         self.assertTrue(node_a.prev is None)
@@ -87,8 +87,8 @@ class TestLinkedListItem(unittest.TestCase):
 
     def test_previous_item(self):
         """Тест соединения узлов через previous_item"""
-        node_a = Node(42)
-        node_b = Node(196)
+        node_a = LinkedListItem(42)
+        node_b = LinkedListItem(196)
         node_b.prev = node_a
         self.assertTrue(node_a.next is node_b)
         self.assertTrue(node_a.prev is None)
@@ -104,7 +104,7 @@ class TestLinkedList(unittest.TestCase):
             first = None
             previous = None
             for i in range(expected_len):
-                node = Node(i)
+                node = LinkedListItem(i)
                 if previous:
                     previous.next = node
                 previous = node
@@ -112,7 +112,7 @@ class TestLinkedList(unittest.TestCase):
                     first = node
             if previous and first:
                 previous.next = first
-            linked_list = DoublyLinkedList(first)
+            linked_list = LinkedList(first)
             with self.subTest(expected_len=expected_len):
                 self.assertEqual(len(linked_list), expected_len)
 
@@ -123,7 +123,7 @@ class TestLinkedList(unittest.TestCase):
             previous = None
             last = None
             for i in range(expected_len):
-                node = Node(i)
+                node = LinkedListItem(i)
                 if previous:
                     previous.next = node
                 previous = node
@@ -136,7 +136,7 @@ class TestLinkedList(unittest.TestCase):
             with self.subTest(expected_len=expected_len):
                 if expected_len != 0:
                     last.next = first
-                linked_list = DoublyLinkedList(first)
+                linked_list = LinkedList(first)
                 self.assertEqual(linked_list.last, last)
 
     def test_append_left(self):
@@ -144,7 +144,7 @@ class TestLinkedList(unittest.TestCase):
         for expected_len in TEST_LAST:
             first = previous = None
             for i in range(expected_len):
-                node = Node(i)
+                node = LinkedListItem(i)
                 if previous:
                     previous.next = node
                 previous = node
@@ -152,7 +152,7 @@ class TestLinkedList(unittest.TestCase):
                     first = node
             if previous and first:
                 previous.next = first
-            linked_list = DoublyLinkedList(first)
+            linked_list = LinkedList(first)
             with self.subTest(expected_len=expected_len):
                 last_first = linked_list.first_node
                 linked_list.append_left(42)
@@ -171,7 +171,7 @@ class TestLinkedList(unittest.TestCase):
             first = None
             previous = None
             for i in range(expected_len):
-                node = Node(i)
+                node = LinkedListItem(i)
                 if previous:
                     previous.next = node
                 previous = node
@@ -179,7 +179,7 @@ class TestLinkedList(unittest.TestCase):
                     first = node
             if previous and first:
                 previous.next = first
-            linked_list = DoublyLinkedList(first)
+            linked_list = LinkedList(first)
             with self.subTest(expected_len=expected_len):
                 linked_list.append_right(42)
                 appended_item = linked_list.last
@@ -197,7 +197,7 @@ class TestLinkedList(unittest.TestCase):
             first = None
             previous = None
             for i in range(expected_len):
-                node = Node(i)
+                node = LinkedListItem(i)
                 if previous:
                     previous.next = node
                 previous = node
@@ -205,7 +205,7 @@ class TestLinkedList(unittest.TestCase):
                     first = node
             if previous and first:
                 previous.next = first
-            linked_list = DoublyLinkedList(first)
+            linked_list = LinkedList(first)
             with self.subTest(expected_len=expected_len):
                 linked_list.append(42)
                 appended_item = linked_list.last
