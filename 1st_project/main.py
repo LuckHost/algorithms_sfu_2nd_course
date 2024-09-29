@@ -215,15 +215,15 @@ class PlaylistUI(QMainWindow):
         response = QInputDialog.getInt(
             self,
             "Место композиции",
-            f"Введите число от 1 до {len(self.current_playlist)}",
-            min=1,
-            max=len(self.current_playlist),
+            f"Введите число от 0 до {len(self.current_playlist) - 1}",
+            min=0,
+            max=len(self.current_playlist) - 1,
         )
 
         if not response[1]:
             return  # Если ввод отменен
 
-        new_position = response[0] - 1
+        new_position = response[0]
 
         # Проверяем, не совпадают ли текущая и новая позиции
         if current_row == new_position:
@@ -235,17 +235,21 @@ class PlaylistUI(QMainWindow):
         # Удаляем трек из текущей позиции
         self.remove_track()
 
-        # Вставляем трек на новую позицию
-        if current_row < new_position:
-            prev_track = self.find_song_by_id(new_position - 1)
+        if new_position == 0:
+            # Если перемещаем трек в самое начало
+            self.current_playlist.append_left(track_to_move.data)
         else:
-            prev_track = self.find_song_by_id(new_position)
+            # Вставляем трек на нужную позицию
+            if current_row < new_position:
+                prev_track = self.find_song_by_id(new_position - 1)
+            else:
+                prev_track = self.find_song_by_id(new_position)
 
-        # Добавляем трек обратно в плейлист на нужную позицию
-        self.current_playlist.insert(prev_track.data, track_to_move.data)
+            self.current_playlist.insert(prev_track.data, track_to_move.data)
 
         # Обновляем список треков в интерфейсе
         self.update_track_list()
+
 
         
     def find_song_by_id(self, sid):
