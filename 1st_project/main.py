@@ -282,7 +282,8 @@ class PlaylistUI(QMainWindow):
             self.current_playlist.play_all(
                 self.find_song_by_id(0)
             )
-            print("Проигрывается плейлист целиком")
+        
+        self.timer.start()
             
 
     def next_track(self):
