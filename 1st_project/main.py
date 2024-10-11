@@ -6,7 +6,7 @@ QInputDialog, QMessageBox
 from PyQt5 import QtCore
 import pygame
 from music_track import MusicTrack
-from playlist import Playlist
+from PlayList import Playlist
 
 class PlaylistUI(QMainWindow):
     def __init__(self):
@@ -221,12 +221,14 @@ class PlaylistUI(QMainWindow):
         )
 
         if not response[1]:
+            print("Ввод отменен")
             return  # Если ввод отменен
 
         new_position = response[0]
 
         # Проверяем, не совпадают ли текущая и новая позиции
         if current_row == new_position:
+            print("позиции совпадают")
             return
 
         # Находим трек для перемещения
@@ -238,11 +240,19 @@ class PlaylistUI(QMainWindow):
         if new_position == 0:
             # Если перемещаем трек в самое начало
             self.current_playlist.append_left(track_to_move.data)
+        elif current_row == len(self.current_playlist):
+            print("перенос последнего")
+            prev_track = self.find_song_by_id(new_position - 1)
+            self.current_playlist.insert(prev_track.data, track_to_move.data)
         else:
             # Вставляем трек на нужную позицию
+            print(current_row, len(self.current_playlist) - 2)
+            
             if current_row < new_position:
+                print(current_row, new_position)
                 prev_track = self.find_song_by_id(new_position - 1)
             else:
+                print(current_row, new_position)
                 prev_track = self.find_song_by_id(new_position)
 
             self.current_playlist.insert(prev_track.data, track_to_move.data)
@@ -254,9 +264,7 @@ class PlaylistUI(QMainWindow):
         
     def find_song_by_id(self, sid):
         """Find song by id."""
-        print(self.current_playlist)
         for idx, track in enumerate(self.current_playlist):
-            print(f"{sid} {idx}")
             if idx == sid:
                 return track
 
