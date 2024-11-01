@@ -1,3 +1,5 @@
+import argparse
+from typing import Callable, Optional, List
 from typing import Callable, Optional, List
 
 # Вспомогательная функция для обмена элементов
@@ -131,8 +133,44 @@ def my_sort(array: List, reverse: bool = False,
     else:
         raise ValueError(f"Неизвестный алгоритм сортировки: {algorithm}")
 
-# Пример использования:
+# Чтение массива из файла
+def read_array_from_file(file_path: str) -> List[int]:
+    with open(file_path, 'r') as file:
+        array = [int(num) for num in file.read().split()]
+    return array
+
+# Запись массива в файл
+def write_array_to_file(array: List[int], file_path: str):
+    with open(file_path, 'w') as file:
+        file.write(" ".join(map(str, array)))
+
+# Основная функция с аргументами командной строки
+def main():
+    parser = argparse.ArgumentParser(description="Сортировка массива с выбором алгоритма.")
+    parser.add_argument("-i", "--input", type=str, help="Путь к файлу с исходным массивом")
+    parser.add_argument("-o", "--output", type=str, help="Путь к файлу для сохранения отсортированного массива")
+    parser.add_argument("-a", "--algorithm", type=str, choices=['timsort', 'mergesort', 'quicksort', 'shaker'],
+                        default="timsort", help="Алгоритм сортировки")
+    parser.add_argument("-r", "--reverse", action="store_true", help="Сортировать в обратном порядке")
+    
+    args = parser.parse_args()
+
+    # Чтение данных из файла, если указан входной файл
+    if args.input:
+        array = read_array_from_file(args.input)
+    else:
+        array = [2, -3, 5, 0, 5]  # пример массива, если файл не указан
+
+    # Выполнение сортировки
+    sorted_array = my_sort(array, reverse=args.reverse, algorithm=args.algorithm)
+
+    # Сохранение результата в файл, если указан выходной файл
+    if args.output:
+        write_array_to_file(sorted_array, args.output)
+        print(f"Отсортированный массив сохранен в файл: {args.output}")
+    else:
+        print("Отсортированный массив:", sorted_array)
+
+# Запуск программы
 if __name__ == '__main__':
-    sample_array = [2, -3, 5, 0, 5]
-    sorted_array = my_sort(sample_array, reverse=False, algorithm='quicksort')
-    print("Отсортированный массив:", sorted_array)
+    main()
