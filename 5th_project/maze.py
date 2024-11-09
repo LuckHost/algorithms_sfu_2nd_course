@@ -413,21 +413,32 @@ if __name__ == "__main__":
     solve_indecies = solve_args.split(",")
 
     if len(solve_indecies) != 4:
-        raise  ValueError("Error: Provide solving coordinates in the format 'start_row,start_col,end_row,end_col'.")
+        print("Provide solving coordinates in the format" +
+                          "'start_row,start_col,end_row,end_col' to see solution")
+        if args.console_output:
+            maze.print_maze()
+            
+        if args.filename:
+            if args.text_output:
+                maze.export_maze_to_file(args.filename + ".txt")
 
-    start = list(map(int, solve_indecies[:2]))
-    end = list(map(int, solve_indecies[2:]))
-    maze.solve_maze(start, end)
+            if args.image_output:
+                maze.create_maze_png(maze.maze).save(args.filename + ".png", "PNG")
+        
+    else:
+        start = list(map(int, solve_indecies[:2]))
+        end = list(map(int, solve_indecies[2:]))
+        maze.solve_maze(start, end)
 
-    if args.console_output:
-        maze.print_maze()
+        if args.console_output:
+            maze.print_maze()
 
-        if maze.path:
-            maze.print_solved_maze()
+            if maze.path:
+                maze.print_solved_maze()
 
-    if args.filename:
-        if args.text_output:
-            maze.export_maze_to_file(args.filename + ".txt")
+        if args.filename:
+            if args.text_output:
+                maze.export_maze_to_file(args.filename + ".txt")
 
-        if args.image_output:
-            maze.create_maze_png(maze.maze).save(args.filename + ".png", "PNG")
+            if args.image_output:
+                maze.create_maze_png(maze.maze).save(args.filename + ".png", "PNG")
